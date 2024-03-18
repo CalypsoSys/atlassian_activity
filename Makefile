@@ -18,17 +18,14 @@ GORUN := $(GOCMD) run
 # Build the project
 build:
 	$(GOBUILD) -o $(BIN_DIR)/$(BIN) $(SRC_DIR)/atlassian_collector/
+	$(GOBUILD) -o $(BIN_DIR)/$(BIN) $(SRC_DIR)/atlassian_reporter/
 
 # Clean up the project
 clean:
 	$(GOCLEAN)
 	rm -f $(BIN_DIR)/$(BIN)
 
-# Run the project
-run:
-	$(GORUN) $(SRC_DIR)/main.go
-
 # Make directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-.PHONY: build clean run
+.PHONY: build clean
