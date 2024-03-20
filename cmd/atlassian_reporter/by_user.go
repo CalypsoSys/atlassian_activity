@@ -49,7 +49,7 @@ func writeByUsers() {
 
 	sort.Strings(periods)
 	writer.WriteString(fmt.Sprintf("\t%s\n", strings.Join(periods, "\t\t\t\t\t")))
-	writer.WriteString(fmt.Sprintf("user%s\n", strings.Repeat("\tTickets\tAssigned\tCommented\tPRs\tCommented", len(periods))))
+	writer.WriteString(fmt.Sprintf("user%s\n", strings.Repeat("\tTickets\tAssigned\tCommented\tPRs\tCommits", len(periods))))
 
 	for _, user := range sortedKeys(users) {
 		writer.WriteString(user)
@@ -58,7 +58,7 @@ func writeByUsers() {
 			if _, exists := users[user][period]; exists {
 				totals = users[user][period]
 			}
-			writer.WriteString(fmt.Sprintf("\t%d\t%d\t%d\t%d\t%d", totals.totalTickets, totals.totalAssigned, totals.totalCommented, totals.totalPullRequests, totals.totalCommented))
+			writer.WriteString(fmt.Sprintf("\t%d\t%d\t%d\t%d\t%d", totals.totalTickets, totals.totalAssigned, totals.totalCommented, totals.totalPullRequests, totals.totalCommits))
 		}
 		writer.WriteString("\n")
 		writer.Flush()
