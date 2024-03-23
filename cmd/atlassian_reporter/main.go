@@ -17,6 +17,9 @@ var (
 	outputFolder string
 	userFilter   string
 	brief        bool
+	summary      bool
+	userSummary  bool
+	userDetails  bool
 )
 
 func init() {
@@ -28,17 +31,31 @@ func init() {
 	flag.StringVar(&userFilter, "user-filter", "", "User filter (match in user fields)")
 	flag.BoolVar(&brief, "b", false, "Brief output")
 	flag.BoolVar(&brief, "brief", false, "Brief output")
+	flag.BoolVar(&summary, "s", false, "Summary report")
+	flag.BoolVar(&summary, "summary", false, "Summary Report")
+	flag.BoolVar(&userSummary, "us", false, "User summary report")
+	flag.BoolVar(&userSummary, "user-summary", false, "User summary Report")
+	flag.BoolVar(&userDetails, "ud", false, "User detail report")
+	flag.BoolVar(&userDetails, "user-detail", false, "User detail report")
 	flag.Parse()
+
+	if !summary && !userSummary && !userDetails {
+		fmt.Println("No output type chosen, please select at least 1 output type")
+		os.Exit(1)
+	}
 
 	userFilter = strings.ToLower(userFilter)
 }
 
 func main() {
-	file, _ := os.Create(path.Join(outputFolder, "atlassian_totals.csv"))
-	defer file.Close()
+	var summaryWriter *bufio.Writer
+	if summary {
+		file, _ := os.Create(path.Join(outputFolder, "atlassian_totals.csv"))
+		defer file.Close()
 
-	writer := bufio.NewWriter(file)
-	writer.WriteString("period\ttickets\tassigned changes\tstatus changes\tcomments\tpull requests\tcommits\tworkspaces\trepositories\n")
+		summaryWriter = bufio.NewWriter(file)
+		summaryWriter.WriteString("period\ttickets\tassigned changes\tstatus changes\tcomments\tpull requests\tcommits\tworkspaces\trepositories\n")
+	}
 
 	// Walk the directory
 	err := filepath.Walk(inputFolder, func(name string, info os.FileInfo, err error) error {
@@ -56,22 +73,28 @@ func main() {
 				period := fmt.Sprintf("%s to %s", report.FromDate.Format("2006-01-02"), report.ToDate.Format("2006-01-02"))
 				addPeriod(period)
 
-				writer.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-					period,
-					report.TotalTickets,
-					report.TotalAssigneeChanges,
-					report.TotalStatusChanges,
-					report.TotalComments,
-					report.TotalPRs,
-					report.TotalCommits,
-					report.TotalWorkSpaces,
-					report.TotalRepos))
+				if summaryWriter != nil {
+					summaryWriter.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+						period,
+						report.TotalTickets,
+						report.TotalAssigneeChanges,
+						report.TotalStatusChanges,
+						report.TotalComments,
+						report.TotalPRs,
+						report.TotalCommits,
+						report.TotalWorkSpaces,
+						report.TotalRepos))
+				}
 
-				outputTextFile(strings.ReplaceAll(name, ".json", ".txt"), &report)
+				if userDetails {
+					outputTextFile(strings.ReplaceAll(name, ".json", ".txt"), &report)
+				}
 
-				for _, user := range report.Users {
-					if userFilter == "" || checkUser(user) {
-						addUser(period, user)
+				if userSummary {
+					for _, user := range report.Users {
+						if userFilter == "" || checkUser(user) {
+							addUser(period, user)
+						}
 					}
 				}
 			} else {
@@ -86,9 +109,11 @@ func main() {
 		fmt.Println("Error walking through directory:", err)
 	}
 
-	writer.Flush()
+	summaryWriter.Flush()
 
-	writeByUsers()
+	if userSummary {
+		writeByUsers()
+	}
 }
 
 func checkUser(user *results.User) bool {
