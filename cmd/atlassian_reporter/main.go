@@ -15,16 +15,22 @@ import (
 var (
 	inputFolder  string
 	outputFolder string
+	userFilter   string
+	brief        bool
 )
 
 func init() {
 	flag.StringVar(&inputFolder, "i", "", "Input file(s) location")
 	flag.StringVar(&inputFolder, "input", "", "Input file(s) location")
-
 	flag.StringVar(&outputFolder, "o", "", "Output file(s) location")
 	flag.StringVar(&outputFolder, "output", "", "Output file(s) location")
+	flag.StringVar(&userFilter, "uf", "", "User filter (match in user fields)")
+	flag.StringVar(&userFilter, "user-filter", "", "User filter (match in user fields)")
+	flag.BoolVar(&brief, "b", false, "Brief output")
+	flag.BoolVar(&brief, "brief", false, "Brief output")
 	flag.Parse()
 
+	userFilter = strings.ToLower(userFilter)
 }
 
 func main() {
@@ -64,7 +70,9 @@ func main() {
 				outputTextFile(strings.ReplaceAll(name, ".json", ".txt"), &report)
 
 				for _, user := range report.Users {
-					addUser(period, user)
+					if userFilter == "" || checkUser(user) {
+						addUser(period, user)
+					}
 				}
 			} else {
 				fmt.Printf("error reading %s %v", info.Name(), err)
@@ -81,4 +89,13 @@ func main() {
 	writer.Flush()
 
 	writeByUsers()
+}
+
+func checkUser(user *results.User) bool {
+	return strings.Contains(strings.ToLower(user.UserKey), userFilter) ||
+		strings.Contains(strings.ToLower(user.AccountID), userFilter) ||
+		strings.Contains(strings.ToLower(user.DisplayName), userFilter) ||
+		strings.Contains(strings.ToLower(user.EmailAddress), userFilter) ||
+		strings.Contains(strings.ToLower(user.NickName), userFilter) ||
+		strings.Contains(strings.ToLower(user.OtherIDs), userFilter)
 }
