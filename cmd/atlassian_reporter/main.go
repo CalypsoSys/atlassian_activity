@@ -17,6 +17,7 @@ var (
 	outputFolder string
 	userFilter   string
 	brief        bool
+	all          bool
 	summary      bool
 	userSummary  bool
 	userDetails  bool
@@ -31,6 +32,8 @@ func init() {
 	flag.StringVar(&userFilter, "user-filter", "", "User filter (match in user fields)")
 	flag.BoolVar(&brief, "b", false, "Brief output")
 	flag.BoolVar(&brief, "brief", false, "Brief output")
+	flag.BoolVar(&all, "a", false, "All output report types")
+	flag.BoolVar(&all, "all", false, "All output report types")
 	flag.BoolVar(&summary, "s", false, "Summary report")
 	flag.BoolVar(&summary, "summary", false, "Summary Report")
 	flag.BoolVar(&userSummary, "us", false, "User summary report")
@@ -38,6 +41,12 @@ func init() {
 	flag.BoolVar(&userDetails, "ud", false, "User detail report")
 	flag.BoolVar(&userDetails, "user-detail", false, "User detail report")
 	flag.Parse()
+
+	if all {
+		summary = true
+		userSummary = true
+		userDetails = true 
+	}
 
 	if !summary && !userSummary && !userDetails {
 		fmt.Println("No output type chosen, please select at least 1 output type")
