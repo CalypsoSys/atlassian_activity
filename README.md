@@ -263,16 +263,35 @@ This documentation should guide you in configuring and using the tool effectivel
 ```
 
 # Command-Line Options for `atlassian_reporter`
-The tool supports the following command-line options:
+The tool supports the following command-line options for configuring its operation:
 
-* `-i` or `--input`: The location of the input file(s).
-* `-o` or `--output`: The location for the output file(s).
+* `-i` or `--input`: Specifies the location of input file(s).
+* `-o` or `--output`: Specifies the location for output file(s).
+* `-uf` or `--user-filter`: Applies a filter to match specific user fields.
+* `-b` or `--brief`: Generates a brief version of the output.
+* `-a` or `--all`: Generates all available types of output reports.
+* `-s` or `--summary`: Generates a summary report.
+* `-us` or `--user-summary`: Generates a summary report focused on user information.
+* `-ud` or `--user-detail`: Generates a detailed report containing user information.
+
+## Behavior and Dependencies
+### Output Types
+The `--summary`, `--user-summary`, and `--user-detail` flags control the types of reports the program generates. If none of these flags are specified, the program will prompt the user to select at least one output type.
+
+The `--all` flag is a convenience option that enables all available report types, overriding individual report type flags.
+
+### User Filtering
+The `--user-filter` option allows targeting specific users within the input files. This filter applies to fields associated with user information. The filtering is case-insensitive.
+
+### Input and Output
+Input and output folders must be specified for the program to know where to find the input files and where to save the generated reports. If these are not provided, the program may not function as expected.
 
 ## Usage Example
 To run the tool with command-line options:
 
 ```
-./atlassian_reporter -i "./output" -o "./output"
+./atlassian_reporter -i "./output" -o "./output" -a
+./bin/atlassian_reporter -i "./output/last_year" -o "./output/last_year" -a -b -uf "@example.com"
 ```
 
 ## Sample output `atlassian_totals.csv`
