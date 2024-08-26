@@ -38,13 +38,18 @@ func gatherResults() *results.Report {
 		outputUser.OtherIDs = user.otherIdentifer()
 
 		userActivities := activities[user.key]
+		if userActivities == nil {
+			logError("No activities found for user %s", user.getUserIdentifier())
+		}
 
 		outputUser.AssignedIssues = map[string][]string{}
 		outputUser.CommentedIssues = map[string][]string{}
 		outputUser.AssignedInactiveIssues = map[string][]string{}
 		outputUser.OtherIssues = map[string][]string{}
 		outputUser.TicketsByStatus = map[string]int{}
-		outputUser.TotalTickets = len(userActivities.tickets)
+		if userActivities != nil {
+			outputUser.TotalTickets = len(userActivities.tickets)
+		}
 
 		issueProcessed := map[string]bool{}
 		for _, role := range assignmentStatuses {
@@ -60,34 +65,40 @@ func gatherResults() *results.Report {
 				issues = outputUser.OtherIssues
 			}
 
-			for issue, assigned := range userActivities.tickets {
-				if _, exists := issueProcessed[issue]; !exists {
-					if _, exists := assigned[role]; exists || role == other {
-						statuses := []string{}
-						for activity := range assigned {
-							outputUser.TicketsByStatus[activity]++
-							statuses = append(statuses, activity)
+			if userActivities != nil {
+				for issue, assigned := range userActivities.tickets {
+					if _, exists := issueProcessed[issue]; !exists {
+						if _, exists := assigned[role]; exists || role == other {
+							statuses := []string{}
+							for activity := range assigned {
+								outputUser.TicketsByStatus[activity]++
+								statuses = append(statuses, activity)
+							}
+							issues[issue] = statuses
+							issueProcessed[issue] = true
 						}
-						issues[issue] = statuses
-						issueProcessed[issue] = true
 					}
 				}
 			}
 		}
 
 		outputUser.PullRequests = map[string][]string{}
-		for repo, prs := range userActivities.pullRequests {
-			outputUser.TotalPullRequests += len(prs)
-			outputUser.PullRequests[repo] = []string{}
-			for pr := range prs {
-				outputUser.PullRequests[repo] = append(outputUser.PullRequests[repo], pr)
+		if userActivities != nil {
+			for repo, prs := range userActivities.pullRequests {
+				outputUser.TotalPullRequests += len(prs)
+				outputUser.PullRequests[repo] = []string{}
+				for pr := range prs {
+					outputUser.PullRequests[repo] = append(outputUser.PullRequests[repo], pr)
+				}
 			}
 		}
 
 		outputUser.Commits = map[string]int{}
-		for repo, commits := range userActivities.commits {
-			outputUser.Commits[repo] = commits
-			outputUser.TotalCommits += commits
+		if userActivities != nil {
+			for repo, commits := range userActivities.commits {
+				outputUser.Commits[repo] = commits
+				outputUser.TotalCommits += commits
+			}
 		}
 
 		output.Users = append(output.Users, &outputUser)

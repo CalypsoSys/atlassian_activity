@@ -22,6 +22,7 @@ type JiraResponse struct {
 				// Add more fields as needed
 			} `json:"assignee"`
 			Created string `json:"created"`
+			Updated string `json:"updated"`
 		} `json:"fields"`
 	} `json:"issues"`
 }
@@ -64,7 +65,8 @@ func loadIssues() {
 	startAt := 0
 	maxResults := 50 // Adjust as needed//
 
-	jql := url.QueryEscape(fmt.Sprintf("updated >= '%s' AND updated <= '%s'", fromDate.Format("2006-01-02"), toDate.Format("2006-01-02")))
+	//jql := url.QueryEscape(fmt.Sprintf("updated >= '%s' AND updated <= '%s'", fromDate.Format("2006-01-02"), toDate.Format("2006-01-02")))
+	jql := url.QueryEscape(fmt.Sprintf("updated >= '%s'", fromDate.Format("2006-01-02")))
 	for {
 		url := fmt.Sprintf("https://%s/rest/api/3/search?jql=%s&startAt=%d&maxResults=%d", atlasianDomain, jql, startAt, maxResults)
 		body := callAPI(url, jiraUserName, jiraToken)
@@ -90,7 +92,9 @@ func loadIssues() {
 				thisStatus = assigned
 			}
 			userId := addFindUser(issue.Fields.Assignee.AccountID, issue.Fields.Assignee.DisplayName, issue.Fields.Assignee.EmailAddress, "")
-			addTicketActivity(userId, issue.Key, issue.Fields.Summary, thisStatus)
+			if thisStatus == assigned || wasInRangeWeek(issue.Fields.Updated) == 0 {
+				addTicketActivity(userId, issue.Key, issue.Fields.Summary, thisStatus)
+			}
 			getChangeLog(issue.Key, issue.Fields.Summary)
 			getComments(issue.Key, issue.Fields.Summary)
 		}

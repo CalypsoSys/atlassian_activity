@@ -117,7 +117,9 @@ func (user *user) checkSetUser(set string, check string) string {
 	}
 	if check != "" && set != check {
 		user.otherIdentifiers[check] = true
-		logError("Mismatch %s vs %s", set, check)
+		if !strings.EqualFold(set, check) {
+			logError("Mismatch %s vs %s", set, check)
+		}
 	}
 
 	return set
