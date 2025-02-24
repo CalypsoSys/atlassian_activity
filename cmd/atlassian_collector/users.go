@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -16,7 +17,8 @@ type user struct {
 }
 
 var (
-	allUsers = []*user{}
+	allUsers         = []*user{}
+	mismatchMessages = map[string]bool{}
 )
 
 func sortUsers() {
@@ -118,7 +120,11 @@ func (user *user) checkSetUser(set string, check string) string {
 	if check != "" && set != check {
 		user.otherIdentifiers[check] = true
 		if !strings.EqualFold(set, check) {
-			logError("Mismatch %s vs %s", set, check)
+			mismatchMessage := fmt.Sprintf("Mismatch %s vs %s", set, check)
+			if _, exists := mismatchMessages[mismatchMessage]; !exists {
+				mismatchMessages[mismatchMessage] = true
+				logError(mismatchMessage)
+			}
 		}
 	}
 
